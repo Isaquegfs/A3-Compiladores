@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Mapa Conceitual Interativo - PBS vs Compiladores</title>
+  <!-- Mermaid.js para renderização do diagrama -->
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <!-- SweetAlert2 para as janelas explicativas -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      width: 100vw;
+      height: 100vh;
+      height: 100dvh;
+      margin: 0;
+      padding: 0;
+      background-color: #0f172a;
+      font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      color: #f8fafc;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    
+    /* TOPO OPTIMIZADO */
+    header {
+      width: 100%;
+      padding: 6px 15px;
+      background: #1e293b;
+      border-bottom: 1px solid #334155;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 15px;
+      flex-shrink: 0;
+    }
+    header h1 {
+      margin: 0;
+      font-size: 15px;
+      color: #38bdf8;
+      white-space: nowrap;
+    }
+    header p {
+      margin: 0;
+      font-size: 12px;
+      color: #94a3b8;
+      white-space: nowrap;
+    }
+
+    main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 8px 12px;
+      gap: 8px;
+      height: calc(100vh - 35px);
+      height: calc(100dvh - 35px);
+      overflow: hidden;
+    }
+
+    /* LEGENDA COMPACTA EM UMA LINHA */
+    .legend-card {
+      background: #ffffff;
+      border-radius: 6px;
+      padding: 6px 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+    .legend-title {
+      font-size: 10px;
+      font-weight: bold;
+      color: #475569;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      white-space: nowrap;
+    }
+    .legend-bar {
+      display: flex;
+      flex-wrap: nowrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 6px;
+      flex: 1;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    .legend-btn {
+      padding: 4px 6px;
+      border-radius: 4px;
+      font-size: 10.5px;
+      font-weight: bold;
+      color: #000000;
+      cursor: pointer;
+      border: 1.5px solid;
+      white-space: nowrap;
+      flex: 1 0 auto;
+      text-align: center;
+      transition: transform 0.1s ease, filter 0.1s ease;
+      outline: none;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    .legend-btn:hover {
+      transform: translateY(-1px);
+      filter: brightness(0.92);
+    }
+
+    /* CORES DAS SEÇÕES */
+    .sec411 { background-color: #e2e8f0; border-color: #334155; }
+    .sec412 { background-color: #bae6fd; border-color: #0284c7; }
+    .sec413 { background-color: #fecaca; border-color: #dc2626; }
+    .sec414 { background-color: #fef08a; border-color: #ca8a04; }
+    .sec415 { background-color: #bbf7d0; border-color: #16a34a; }
+
+    /* CARD DO MAPA CONCEITUAL (DESKTOP MAXIMIZADO IGUAL À IMAGEM 1) */
+    .map-card {
+      flex: 1;
+      background: #ffffff;
+      border-radius: 8px;
+      padding: 6px 10px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+      position: relative;
+    }
+    .mermaid {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .mermaid svg {
+      width: 100% !important;
+      height: 100% !important;
+      max-width: 100% !important;
+      max-height: 100% !important;
+    }
+
+    /* ESTILO DE FONTES NO DESKTOP (13px RESTAURADOS) */
+    .node label, .node text {
+      font-size: 13px !important;
+      font-weight: bold !important;
+    }
+    .edgeLabel text {
+      font-size: 11px !important;
+    }
+    .node {
+      cursor: pointer !important;
+    }
+
+    /* POP-UP INTERATIVO */
+    .swal2-popup {
+      font-family: 'Segoe UI', sans-serif !important;
+      border-radius: 12px !important;
+      max-width: 90vw !important;
+    }
+    .modal-tag {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 5px;
+      font-size: 12px;
+      font-weight: bold;
+      color: #000;
+      margin-bottom: 8px;
+    }
+
+    /* REGRA ESPECÍFICA PARA MOBILE */
+    @media (max-width: 768px) {
+      header {
+        flex-direction: column;
+        gap: 2px;
+        padding: 5px 10px;
+      }
+      header h1 {
+        font-size: 13px;
+        white-space: normal;
+        text-align: center;
+      }
+      header p {
+        font-size: 10px;
+        white-space: normal;
+        text-align: center;
+      }
+      .legend-card {
+        padding: 4px 8px;
+      }
+      .map-card {
+        justify-content: flex-start;
+        align-items: flex-start;
+        overflow-x: auto;
+        overflow-y: hidden;
+        padding: 6px;
+      }
+      .mermaid {
+        justify-content: flex-start;
+        align-items: flex-start;
+      }
+      .mermaid svg {
+        width: auto !important;
+        height: 100% !important;
+        max-width: none !important;
+      }
+      .node label, .node text {
+        font-size: 11.5px !important;
+      }
+      .edgeLabel text {
+        font-size: 10px !important;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>Mapa Conceitual Interativo: Virtualização vs Compiladores no PBS</h1>
+    <p>• Clique sobre qualquer caixa do mapa ou da legenda para abrir a fundamentação teórica</p>
+  </header>
+
+  <main>
+    <!-- LEGENDA COMPACTA EM UMA LINHA SÓ -->
+    <div class="legend-card">
+      <div class="legend-title">Legenda:</div>
+      <div class="legend-bar">
+        <button class="legend-btn sec411" onclick="openModal('L411')">4.1.1. Fluxo de Emissão e Otimização</button>
+        <button class="legend-btn sec412" onclick="openModal('L412')">4.1.2. Confronto com Hipervisor KVM</button>
+        <button class="legend-btn sec413" onclick="openModal('L413')">4.1.3. Impacto dos VM-Exits no IPC</button>
+        <button class="legend-btn sec414" onclick="openModal('L414')">4.1.4. Paginação Bidimensional</button>
+        <button class="legend-btn sec415" onclick="openModal('L415')">4.1.5. Gargalo no Algoritmo FastCDC</button>
+      </div>
+    </div>
+
+    <!-- MAPA CONCEITUAL -->
+    <div class="map-card">
+      <div class="mermaid">
+flowchart TD
+    COMP["Fases do Compilador (Back-end)"] -- "planeja" --> OPT["Otimizações Estáticas"]
+    
+    OPT -- "englobam" --> SIMD["Autovetorização SIMD"]
+    OPT -- "englobam" --> SCHED["Agendamento de Instruções"]
+    OPT -- "englobam" --> LOC["Localidade de Dados"]
+    
+    COMP -- "realiza" --> GEN["Geração de Código Objeto"]
+    GEN -- "emite" --> X86["Instruções x86-64"]
+    X86 -- "são executadas na" --> CPU["CPU Física"]
+    
+    CPU -- "possui" --> CACHE["Caches (L1/L2/L3)"]
+    CPU -- "possui" --> EXT["Extensões ISA (AVX2, AES-NI)"]
+    
+    CPU -- "é virtualizada pelo" --> KVM["Hipervisor KVM"]
+    KVM -- "provisiona" --> VCPU["vCPU (Modo VMX Non-Root)"]
+    
+    VCPU -- "é configurada por" --> PERF["Perfis de CPU (Host-Passthrough vs Qemu64)"]
+    PERF -- "podem expor ou ocultar" --> EXT
+    
+    VCPU -- "trata operações de I/O de backup gerando" --> VMEXIT["VM-Exits (Modo VMX Root)"]
+    VMEXIT -- "provocam" --> FLUSH["Esvaziamento de Pipeline (Flush)"]
+    VMEXIT -- "provocam" --> POLL["Poluição de Caches L1/L2/L3"]
+    FLUSH -- "reduzem drasticamente" --> IPC_CPU["IPC (Instruções por Ciclo)"]
+    POLL -- "reduzem drasticamente" --> IPC_CPU
+    
+    LOC -- "é degradada pela" --> TRAD["Tradução Bidimensional de Memória"]
+    TRAD -- "utiliza" --> EPT["EPT/NPT"]
+    EPT -- "eleva o custo de tradução para" --> TLB["Até 24 acessos físicos à RAM por falha de TLB"]
+    
+    OPT -- "são consumidas pelo" --> PBS["Proxmox Backup Server (PBS)"]
+    PBS -- "executa" --> FCDC["Algoritmo FastCDC (Desduplicação)"]
+    FCDC -- "sofre com queda de" --> IPC_LAT["IPC e Latência de Memória"]
+
+    classDef sec411 fill:#e2e8f0,stroke:#334155,stroke-width:2px,color:#000000,font-weight:bold;
+    classDef sec412 fill:#bae6fd,stroke:#0284c7,stroke-width:2px,color:#000000,font-weight:bold;
+    classDef sec413 fill:#fecaca,stroke:#dc2626,stroke-width:2px,color:#000000,font-weight:bold;
+    classDef sec414 fill:#fef08a,stroke:#ca8a04,stroke-width:2px,color:#000000,font-weight:bold;
+    classDef sec415 fill:#bbf7d0,stroke:#16a34a,stroke-width:2px,color:#000000,font-weight:bold;
+
+    class COMP,OPT,GEN,SIMD,SCHED,LOC,X86 sec411;
+    class CPU,CACHE,EXT,KVM,VCPU,PERF sec412;
+    class VMEXIT,FLUSH,POLL,IPC_CPU sec413;
+    class TRAD,EPT,TLB sec414;
+    class PBS,FCDC,IPC_LAT sec415;
+
+    click COMP openModal; click OPT openModal; click GEN openModal;
+    click SIMD openModal; click SCHED openModal; click LOC openModal;
+    click X86 openModal; click CPU openModal; click CACHE openModal;
+    click EXT openModal; click KVM openModal; click VCPU openModal;
+    click PERF openModal; click VMEXIT openModal; click FLUSH openModal;
+    click POLL openModal; click IPC_CPU openModal; click TRAD openModal;
+    click EPT openModal; click TLB openModal; click PBS openModal;
+    click FCDC openModal; click IPC_LAT openModal;
+      </div>
+    </div>
+  </main>
+
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      securityLevel: 'loose',
+      theme: 'default',
+      flowchart: {
+        useMaxWidth: false,
+        htmlLabels: true
+      }
+    });
+
+    const explanations = {
+      // 4.1.1
+      "COMP": { title: "Fases do Compilador (Back-end)", section: "Seção 4.1.1", color: "#e2e8f0", text: "Fase de otimização e geração de código do compilador Rust/LLVM. O back-end assume um hardware determinístico para transformar a representação intermediária em código de máquina de alto desempenho." },
+      "OPT": { title: "Otimizações Estáticas", section: "Seção 4.1.1", color: "#e2e8f0", text: "Transformações em tempo de compilação (SIMD, agendamento de instruções e preservação de localidade). O compilador assume que o fluxo não sofrerá interrupções bruscas impostas pelo hipervisor." },
+      "GEN": { title: "Geração de Código Objeto", section: "Seção 4.1.1", color: "#e2e8f0", text: "Traduz o código intermediário (LLVM IR) diretamente para instruções executáveis da arquitetura nativa target (x86-64)." },
+      "SIMD": { title: "Autovetorização SIMD", section: "Seção 4.1.1", color: "#e2e8f0", text: "Converte laços escalares em instruções vetoriais paralelas (Single Instruction, Multiple Data), acelerando hashes e criptografia ao processar múltiplos dados simultaneamente." },
+      "SCHED": { title: "Agendamento de Instruções", section: "Seção 4.1.1", color: "#e2e8f0", text: "Reordenação inteligente das instruções para preencher as unidades superscalares do processador, evitando travamentos por dependência de dados." },
+      "LOC": { title: "Localidade de Dados", section: "Seção 4.1.1", color: "#e2e8f0", text: "Arranjo das estruturas na memória RAM visando reuso máximo nas caches ultrarrápidas L1/L2/L3, reduzindo requisições ao barramento principal." },
+      "X86": { title: "Instruções x86-64", section: "Seção 4.1.1", color: "#e2e8f0", text: "Conjunto de instruções binárias nativas geradas pelo compilador para execução direta nos núcleos físicos da CPU." },
+
+      // 4.1.2
+      "CPU": { title: "CPU Física", section: "Seção 4.1.2", color: "#bae6fd", text: "Intel Xeon 6980P. Processador físico presente no servidor Bare Metal. É nele que as instruções do sistema são executadas diretamente, utilizando os recursos disponíveis da arquitetura, como núcleos, caches e extensões de instruções." },
+      "CACHE": { title: "Caches (L1/L2/L3)", section: "Seção 4.1.2", color: "#bae6fd", text: "Caches L1, L2 e L3 são níveis de memória de alta velocidade usados pela CPU para reduzir o custo de acesso aos dados. Em ambientes virtualizados, o comportamento das caches pode ser afetado pelo compartilhamento dos recursos do processador e pelas transições entre o sistema convidado e o ambiente de virtualização." },
+      "EXT": { title: "Extensões ISA (AVX2, AES-NI)", section: "Seção 4.1.2", color: "#bae6fd", text: "Extensões da arquitetura x86-64 que fornecem instruções especializadas para determinadas operações, como processamento vetorial e criptografia. Em uma VM, os recursos apresentados ao sistema convidado dependem da configuração do modelo de CPU. O modo Host-Passthrough pode expor ao convidado as características do processador físico, enquanto modelos mais genéricos podem oferecer um conjunto menor de recursos." },
+      "KVM": { title: "Hipervisor KVM", section: "Seção 4.1.2", color: "#bae6fd", text: "KVM (Kernel-based Virtual Machine) é a tecnologia de virtualização integrada ao kernel Linux. Ela permite que máquinas virtuais utilizem recursos de virtualização assistida pelo hardware do processador, enquanto componentes como QEMU participam da execução e virtualização dos dispositivos da VM." },
+      "VCPU": { title: "vCPU (Modo VMX Non-Root)", section: "Seção 4.1.2", color: "#bae6fd", text: "A vCPU representa o processador virtual apresentado à máquina virtual. Ela permite que o sistema convidado execute suas instruções utilizando os recursos da CPU física, enquanto o KVM controla as operações que exigem intervenção do ambiente de virtualização." },
+      "PERF": { title: "Perfis de CPU (Host-Passthrough vs Qemu64)", section: "Seção 4.1.2", color: "#bae6fd", text: "Configuração que define quais características da CPU física serão apresentadas à máquina virtual. O Host-Passthrough procura expor ao convidado as características do processador físico, enquanto modelos de CPU nomeados oferecem um conjunto específico de recursos. Essa configuração pode influenciar quais extensões de instrução ficam disponíveis para o sistema convidado." },
+
+      // 4.1.3
+      "VMEXIT": { title: "VM-Exits (Modo VMX Root)", section: "Seção 4.1.3", color: "#fecaca", text: "Evento que faz a execução da vCPU deixar temporariamente o modo convidado para que o KVM ou outro componente do ambiente de virtualização possa tratar determinada operação. Os motivos podem incluir operações de I/O, acesso a determinados registradores, exceções e outros eventos definidos pela arquitetura." },
+      "FLUSH": { title: "Esvaziamento de Pipeline (Flush)", section: "Seção 4.1.3", color: "#fecaca", text: "Durante determinadas transições provocadas pela virtualização, o processador pode precisar interromper ou reorganizar o fluxo de execução. Esse custo pode reduzir o aproveitamento do pipeline e aumentar a quantidade de trabalho necessária para retomar a execução da máquina virtual." },
+      "POLL": { title: "Poluição de Caches L1/L2/L3", section: "Seção 4.1.3", color: "#fecaca", text: "As transições entre o código do sistema convidado e o ambiente de virtualização podem alterar o conteúdo e a localidade dos dados presentes nas caches. Dependendo da carga de trabalho, isso pode aumentar a ocorrência de cache misses e afetar o desempenho." },
+      "IPC_CPU": { title: "IPC (Instruções por Ciclo)", section: "Seção 4.1.3", color: "#fecaca", text: "IPC (Instructions Per Cycle) representa a quantidade média de instruções executadas pela CPU a cada ciclo. É uma métrica útil para analisar a eficiência de utilização do processador. Alterações no fluxo de execução, espera por dados e custos adicionais da virtualização podem influenciar essa métrica.<br><br><b>IPC (Instruções por Ciclo):</b> Mede PRODUTIVIDADE/EFICIÊNCIA. Diz quantas instruções reais de código o processador consegue concluir a cada pulso do seu relógio (clock).<br><br>• <b>Uso de CPU (%) = O Contagiro / Aceleração:</b> Mede o quanto o motor está 'ocupado' ou girando. Se está em 100%, o pedal está afundado até o fim.<br>• <b>IPC (Instruções por Ciclo) = A Velocidade Real do Carro:</b> Mede o quanto o carro está efetivamente andando para a frente a cada segundo.<br>• <b>No Bare Metal:</b> O pedal está a 100% (Uso de CPU alto) e o carro anda a 200 km/h (IPC alto = backup rápido).<br>• <b>Na Máquina Virtual (KVM):</b> O pedal continua a 100% (Uso de CPU alto), mas o carro está atolado na lama (IPC baixo). O motor faz barulho e consome energia, mas o carro quase não sai do lugar porque fica preso em VM-Exits, limpando o pipeline e esperando a memória RAM." },
+
+      // 4.1.4
+      "TRAD": { title: "Tradução Bidimensional de Memória", section: "Seção 4.1.4", color: "#fef08a", text: "Intermediação exigida para traduzir o Endereço Virtual do Convidado (GVA) para o Endereço Físico do Hospedeiro (HPA), introduzindo uma camada extra de paginação." },
+      "EPT": { title: "EPT/NPT", section: "Seção 4.1.4", color: "#fef08a", text: "EPT (Intel) e NPT (AMD) são mecanismos de tradução de endereços utilizados pela virtualização assistida por hardware. Eles permitem que o processador traduza os endereços utilizados pelo sistema convidado para os endereços correspondentes na memória do hospedeiro. Essa segunda camada de tradução pode aumentar o custo de resolução de endereços em situações de falha de TLB." },
+      "TLB": { title: "Até 24 acessos físicos à RAM por falha de TLB", section: "Seção 4.1.4", color: "#fef08a", text: "Em falhas de TLB em modo 2D, a busca por mapeamento de página exige até 24 acessos à RAM física (contra 4 a 5 no Bare Metal), elevando a latência de memória de 78,4 ns para mais de 150 ns." },
+
+      // 4.1.5
+      "PBS": { title: "Proxmox Backup Server (PBS)", section: "Seção 4.1.5", color: "#bbf7d0", text: "O Proxmox Backup Server é uma solução de backup que utiliza armazenamento baseado em chunks, desduplicação, compressão e mecanismos de integridade e criptografia. Essas operações envolvem processamento de dados e podem gerar carga significativa sobre os recursos do sistema." },
+      "FCDC": { title: "Algoritmo FastCDC (Desduplicação)", section: "Seção 4.1.5", color: "#bbf7d0", text: "Content-Defined Chunking. Algoritmo central de desduplicação do PBS que executa laços ininterruptos de varredura e hash (SHA-256). É extremamente sensível a latência de memória e quedas no IPC." },
+      "IPC_LAT": { title: "IPC e Latência de Memória", section: "Seção 4.1.5", color: "#bbf7d0", text: "Gargalo final comprovado pelo estudo: interrupções de hardware e aumento da latência da RAM anulam as otimizações estáticas geradas pelo compilador LLVM no FastCDC." },
+
+      // Legendas
+      "L411": { title: "4.1.1. O Fluxo de Emissão e Otimização do Código", section: "Seção do Artigo", color: "#e2e8f0", text: "Apresenta como as fases do compilador Rust/LLVM constroem otimizações estáticas (SIMD, agendamento e localidade) assumindo hardware determinístico." },
+      "L412": { title: "4.1.2. O Confronto com o Hipervisor KVM e Perfis de CPU", section: "Seção do Artigo", color: "#bae6fd", text: "Demonstra a diferença entre executar no hardware nativo e em vCPUs virtuais. Perfis genéricos (kvm64) ocultam instruções de aceleração, penalizando a criptografia em 70,6%." },
+      "L413": { title: "4.1.3. O Impacto dos VM-Exits no IPC", section: "Seção do Artigo", color: "#fecaca", text: "Explica os danos causados por interrupções privileged de I/O, que resultam em esvaziamento de pipeline e poluição de cache, reduzindo drasticamente o IPC." },
+      "L414": { title: "4.1.4. A Degradação da Localidade por Paginação Bidimensional", section: "Seção do Artigo", color: "#fef08a", text: "Analisa a sobretaxa da tradução de memória EPT/NPT, que multiplica o custo de acesso à RAM física em até 24 ciclos por falha de TLB." },
+      "L415": { title: "4.1.5. O Gargalo no Algoritmo FastCDC", section: "Seção do Artigo", color: "#bbf7d0", text: "Sintetiza a conclusão do estudo: a desduplicação em tempo real do PBS torna-se o gargalo primário sob virtualização devido à invalidação das premissas de compilação." }
+    };
+
+    window.openModal = function(nodeId) {
+      const data = explanations[nodeId];
+      if (data) {
+        Swal.fire({
+          title: data.title,
+          html: `
+            <div style="text-align: left; margin-top: 8px;">
+              <span class="modal-tag" style="background-color: ${data.color};">${data.section}</span>
+              <p style="font-size: 14px; color: #334155; line-height: 1.5; margin-top: 8px;">${data.text}</p>
+            </div>
+          `,
+          icon: 'info',
+          confirmButtonText: 'Entendido',
+          confirmButtonColor: '#0284c7',
+          customClass: { popup: 'swal2-popup' }
+        });
+      }
+    };
+
+    // EXECUÇÃO CONDICIONAL DE ENQUADRAMENTO
+    document.addEventListener("DOMContentLoaded", () => {
+      const checkInterval = setInterval(() => {
+        const svg = document.querySelector('.map-card .mermaid svg');
+        const nodes = document.querySelectorAll('.node');
+
+        if (svg) {
+          const isMobile = window.innerWidth <= 768;
+          svg.removeAttribute('style');
+
+          if (isMobile) {
+            // Mobile: Alinhado no topo com rolagem horizontal ativa
+            svg.setAttribute('preserveAspectRatio', 'xMinYMin meet');
+            svg.style.height = '100%';
+            svg.style.width = 'auto';
+            svg.style.maxHeight = '100%';
+            svg.style.maxWidth = 'none';
+
+            try {
+              const g = svg.querySelector('g') || svg;
+              const bbox = g.getBBox();
+              if (bbox && bbox.width > 0 && bbox.height > 0) {
+                const padX = 15;
+                const padYTop = 15;
+                const padYBottom = 60;
+                svg.setAttribute('viewBox', `${bbox.x - padX} ${bbox.y - padYTop} ${bbox.width + padX * 2} ${bbox.height + padYTop + padYBottom}`);
+              }
+            } catch (e) {}
+
+          } else {
+            // Desktop: Enquadramento Justo 100% Centralizado sem corte e sem rolagem (Exatamente como Imagem 1)
+            svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+            svg.style.height = '100%';
+            svg.style.width = '100%';
+            svg.style.maxHeight = '100%';
+            svg.style.maxWidth = '100%';
+
+            try {
+              const g = svg.querySelector('g') || svg;
+              const bbox = g.getBBox();
+              if (bbox && bbox.width > 0 && bbox.height > 0) {
+                const padX = 8;
+                const padY = 8;
+                svg.setAttribute('viewBox', `${bbox.x - padX} ${bbox.y - padY} ${bbox.width + padX * 2} ${bbox.height + padY * 2}`);
+              }
+            } catch (e) {}
+          }
+          
+          svg.style.overflow = 'visible';
+        }
+
+        if (nodes.length > 0) {
+          const sortedKeys = Object.keys(explanations).sort((a, b) => b.length - a.length);
+
+          nodes.forEach(node => {
+            node.addEventListener('click', (e) => {
+              e.stopPropagation();
+              const fullId = node.id || '';
+              
+              for (let key of sortedKeys) {
+                const regex = new RegExp('(^|[-_])' + key + '($|[-_])');
+                if (regex.test(fullId)) {
+                  openModal(key);
+                  break;
+                }
+              }
+            });
+          });
+
+          clearInterval(checkInterval);
+        }
+      }, 200);
+    });
+  </script>
+</body>
+</html>
